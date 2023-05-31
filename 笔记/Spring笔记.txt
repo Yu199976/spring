@@ -109,6 +109,27 @@
                3. 判断是否有@Component注解
 
                   1. 判断是单例还是多例
-                  2. 单例bean对象放入单例池中
 
-                  
+                  2. 将对象的class和Scope存入BeanDefinition对象中
+
+                  3. 单例bean对象放入单例池中
+
+      3. 模拟getBean方法
+
+         1. 创建getBean(String beanName)方法
+
+         2. 从BeanDefinitionMap中拿key为beanName的value
+
+         3. 判断是否存在
+            1. 不存在抛出异常
+         4. 根据拿到的BeanDefinition对象getScope作用域
+         5. 判断是单例bean还是多例bean
+            1. 单例bean：直接从单例池SingletonObjects中拿bean对象
+            2. 多例bean：调用createBean方法
+      4. 创建bean-》模拟createBean(String beanName, BeanDefinition beanDefinition) 方法
+         1. 根据beanDefinition对象拿到其class对象
+         2. 调用clazz.getConstructor().newInstance()创建bean对象
+         3. 返回bean
+
+
+​                  

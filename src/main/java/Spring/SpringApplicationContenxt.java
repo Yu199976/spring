@@ -1,7 +1,9 @@
 package Spring;
 
 
+import java.beans.Introspector;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -47,6 +49,11 @@ public class SpringApplicationContenxt {
                             if (aClass.isAnnotationPresent(Component.class)) {
                                 Component ComponentAnnotation = aClass.getAnnotation(Component.class);
                                 String beanName = ComponentAnnotation.value();
+                                //如果注解未填写，存入默认beanName
+                                if("".equals(beanName)){
+                                    beanName = Introspector.decapitalize(aClass.getSimpleName());
+                                }
+
                                 BeanDefinition beanDefinition = new BeanDefinition();
                                 beanDefinition.setType(aClass);
                                 if (aClass.isAnnotationPresent(Scope.class)) {
@@ -73,7 +80,8 @@ public class SpringApplicationContenxt {
         //变历beanDefinitionMap，将单例bean存在单例池SingletonObjects里
         for (String beanName : beanDefinitionMap.keySet()) {
             BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
-            if (beanDefinition.getScope().equals("singleton")) {
+            if (beanDefinition.getScope().equals("singleton") || beanDefinition.getScope().equals("")) {
+                //如果是单例bean对象,调用createBean方法创建bean对象,放入单例池中
                 Object bean = this.createBean(beanName, beanDefinition);
                 SingletonObjects.put(beanName, bean);
             }
@@ -86,7 +94,19 @@ public class SpringApplicationContenxt {
         Class clazz = beanDefinition.getType();
         Object bean = null;
         try {
+            //调用无参构造函数创建bean对象
             bean = clazz.getConstructor().newInstance();
+
+            //实现依赖注入
+            Field[] declaredFields = clazz.getDeclaredFields();
+            for (Field field : declaredFields) {
+                //当前对象有@Autowired注解
+                if (field.isAnnotationPresent(Autowired.class)) {
+                    field.setAccessible(true);
+                    field.set(bean,getBean(field.getName()));
+                }
+            }
+
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();
         }
@@ -101,7 +121,7 @@ public class SpringApplicationContenxt {
             throw new NullPointerException();
         } else {
             String scope = beanDefinition.getScope();
-            if (scope.equals("singleton")) {
+            if (scope.equals("singleton") || scope.equals("")) {
                 //直接从单例池中获取单例bean
                 Object bean = SingletonObjects.get(beanName);
                 if (bean == null) {

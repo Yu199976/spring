@@ -9,17 +9,7 @@ public class Test {
         SpringApplicationContenxt contenxt = new SpringApplicationContenxt(AppConfig.class);
 
         UserService userService = (UserService) contenxt.getBean("userService");
-        System.out.println(contenxt.getBean("userService"));
-        System.out.println(contenxt.getBean("userService"));
-        System.out.println(contenxt.getBean("userService"));
-        System.out.println(contenxt.getBean("userService"));
-
-        System.out.println("--------------------------------");
-        System.out.println(contenxt.getBean("orderService"));
-        System.out.println(contenxt.getBean("orderService"));
-        System.out.println(contenxt.getBean("orderService"));
-        System.out.println(contenxt.getBean("orderService"));
-        System.out.println(contenxt.getBean("orderService"));
+        userService.getAutowired();
 //        System.out.println(userService);
 
     }
