@@ -130,7 +130,7 @@ public class SpringApplicationContenxt {
 
             //初始化前调用afterPropertiesSet()
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
-                Object beforeInitialization = beanPostProcessor.postProcessBeforeInitialization(beanName, bean);
+                bean = beanPostProcessor.postProcessBeforeInitialization(beanName, bean);
             }
 
             //初始化
@@ -141,7 +141,8 @@ public class SpringApplicationContenxt {
 
             //BeanPost Process初始化后 AOP
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
-                Object afterProxy = beanPostProcessor.postProcessAfterInitialization(beanName, bean);
+                bean = beanPostProcessor.postProcessAfterInitialization(beanName, bean);
+
             }
 
 

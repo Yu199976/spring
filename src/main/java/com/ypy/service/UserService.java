@@ -10,7 +10,7 @@ public class UserService implements UserInterface{
     private OrderService orderService;
 
     public void getAutowired(){
-        System.out.println(orderService.test());
+//        System.out.println(orderService.test());
     }
 
 
