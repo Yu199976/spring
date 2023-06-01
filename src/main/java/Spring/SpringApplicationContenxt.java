@@ -6,15 +6,18 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 
 public class SpringApplicationContenxt {
     private Class ConfigClass;
+    //beanDefinitionMap
     ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
+    //单例池singletonMap
     ConcurrentHashMap<String, Object> SingletonObjects = new ConcurrentHashMap<>();
-
+    ArrayList<BeanPostProcessor> beanPostProcessorArrayList = new ArrayList<>();
 
     public SpringApplicationContenxt(Class configClass) throws URISyntaxException {
         ConfigClass = configClass;
@@ -47,6 +50,19 @@ public class SpringApplicationContenxt {
                             aClass = Class.forName(ClassPath);
                             //判断是否包含@Component注解
                             if (aClass.isAnnotationPresent(Component.class)) {
+                                if (BeanPostProcessor.class.isAssignableFrom(aClass)){
+                                    try {
+                                        BeanPostProcessor instance = (BeanPostProcessor) aClass.newInstance();
+                                        beanPostProcessorArrayList.add(instance);
+
+                                    } catch (InstantiationException e) {
+                                        e.printStackTrace();
+                                    } catch (IllegalAccessException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+
                                 Component ComponentAnnotation = aClass.getAnnotation(Component.class);
                                 String beanName = ComponentAnnotation.value();
                                 //如果注解未填写，存入默认beanName
@@ -106,6 +122,28 @@ public class SpringApplicationContenxt {
                     field.set(bean,getBean(field.getName()));
                 }
             }
+            //依赖注入后实现Aware接口的各种回调
+            if(bean instanceof BeanNameAware){
+                //如果实现了这个接口
+                ((BeanNameAware) bean).setBeanName(beanName);
+            }
+
+            //初始化前调用afterPropertiesSet()
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
+                Object beforeInitialization = beanPostProcessor.postProcessBeforeInitialization(beanName, bean);
+            }
+
+            //初始化
+            if(bean instanceof InitializingBean){
+                //如果实现了这个接口
+                ((InitializingBean) bean).afterPropertiesSet();
+            }
+
+            //BeanPost Process初始化后 AOP
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorArrayList) {
+                Object afterProxy = beanPostProcessor.postProcessAfterInitialization(beanName, bean);
+            }
+
 
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             e.printStackTrace();

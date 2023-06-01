@@ -130,6 +130,9 @@
          1. 根据beanDefinition对象拿到其class对象
          2. 调用clazz.getConstructor().newInstance()创建bean对象
          3. 返回bean
-
-
-​                  
+      
+                           5. 模拟Aware回调机制
+                                                1. 实现位置——》实现依赖注入后
+      
+         				  6. 模拟InitializingBean初始化
+                  				  1. 实现位置——》实现依赖注入后
