@@ -133,6 +133,17 @@
       
                            5. 模拟Aware回调机制
                                                 1. 实现位置——》实现依赖注入后
-      
-         				  6. 模拟InitializingBean初始化
-                  				  1. 实现位置——》实现依赖注入后
+                      
+         	    		  6. 模拟InitializingBean初始化
+                           				  1. 实现位置——》实现依赖注入后
+
+### 7、Spring的底层原理
+
+1. Bean的创建的生命周期
+   1. XXX.class---->推断参构造方法---->创建对象----->依赖注入------>---->初始化前(@POSTConstruct)----->初始化(afterPropertiesSet)------>初始化后(AOP)---->代理对象(Proxy)----->放入Map(单例池)----->得到Bean对象
+
+2. 注意(坑点):
+   1. 如果bean对象中有多个构造方法并且未指定找哪个构造方法,spring会去找无参的构造方法如果没有找到则会报错NoSuchMethod异常
+   2. 如果只有一个有参构造函数和无参构造函数时,如果有参构造函数的参数能在单例池中扫描到则会使用有参构造函数,如果没有则会去创建bean
+   3. 循环依赖，在UserService中需要创建OrderService----》创建OrderService时发现注入了UserService
+   4. 有参构造方法找bean对象先通过BeanDefinition对象找到类的类型在通过beanName的到对应的bean对象

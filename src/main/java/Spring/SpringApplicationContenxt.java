@@ -5,6 +5,7 @@ import java.beans.Introspector;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,9 +81,25 @@ public class SpringApplicationContenxt {
                                     //默认是单例bean
                                     beanDefinition.setScope("singleton");
                                 }
-                                beanDefinitionMap.put(beanName, beanDefinition);
 
-//                                beanMap.put(beanName,aClass);
+                                beanDefinitionMap.put(beanName, beanDefinition);
+                                /**
+                                 * 模拟实现bean注解
+                                 */
+                                Method[] methods = aClass.getMethods();
+                                for (Method method : methods) {  //遍历方法
+                                    if (method.isAnnotationPresent(Bean.class)) {  //判断成员属性上是否有bean注解
+                                        beanDefinition.setType(method.getReturnType());  //方法的返回结果类型
+                                        beanDefinition.setScope("singleton");   //单例
+                                        Bean bean = method.getAnnotation(Bean.class);
+                                        beanName = bean.value(); //获取注解的value
+                                        if("".equals(beanName)){
+                                            System.out.println(method.getName());
+                                            beanName = method.getName();
+                                        }
+                                        beanDefinitionMap.put(beanName,beanDefinition) ;
+                                    }
+                                }
                             }
 
                         } catch (ClassNotFoundException e) {
