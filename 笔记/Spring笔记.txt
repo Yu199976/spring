@@ -133,7 +133,7 @@
       
                            5. 模拟Aware回调机制
                                                 1. 实现位置——》实现依赖注入后
-                      
+                                   
          	    		  6. 模拟InitializingBean初始化
                            				  1. 实现位置——》实现依赖注入后
 
@@ -148,7 +148,7 @@
    3. 循环依赖，在UserService中需要创建OrderService----》创建OrderService时发现注入了UserService
    4. 有参构造方法找bean对象先通过BeanDefinition对象找到类的类型在通过beanName的到对应的bean对象
 
-3. 代理对象
+3. AOP代理对象
 
    1. CGlib代理：父子类代理
 
@@ -167,4 +167,86 @@
          }
          ```
 
-         
+4. spring事务
+
+   1. ```java
+      class UserServiceProxy extends UserService{
+      	UserService target;
+          
+          @Transaction
+          public void test(){
+           	//spring事务切面逻辑
+           	//@Transaction注解
+           	//开启事务
+           	//1. 事务管理器新建一个数据库链接
+           	//2. conn.autocommit = false (MyBatis或JDBCTemplate新建链接 autocommit默认值=true)
+              //target.test();
+          }
+          
+      }
+      ```
+
+   2. 事务失效的原理
+
+      1. 非代理对象调用方法会导致事务的传播失效
+
+         1. ```java
+            OrderService orderService = (OrderService) contenxt.getBean("orderService");
+            orderService.test();    //这里的 test方法是代理对象调用test方法
+            	
+            /*
+            *  spring事务切面逻辑
+            *    @Transaction注解
+            *    开启事务
+            *    1. 事务管理器新建一个数据库链接
+            *    2. conn.autocommit = false (MyBatis或JDBCTemplate新建链接 autocommit默认值=true)
+            *    3. 普通对象调用其方法target.test();
+            */
+            	@Transaction
+              	public void test(){
+                    //事务的切面逻辑 
+                    jdbcTemplate.execute(sql1);
+                    a();   //这里调用a方法的是普通对象 new OrderService()
+                }
+            
+            	@Transaction(propagation = Propagation.NEVER)
+              	public void test(){
+                    jdbcTemplate.execute(sql2);
+                }
+            	
+            ```
+
+         2. 解决方式 
+
+            1. 将a方法拆分出去作为一个bean对象
+            2. 在OrderService中自己注入自己
+            3. 使用AOP创建代理对象：AopContext.currentProxy()
+
+      2. 没有添加@Configuration注解导致事务未生效
+
+         1. JDBCTemplate(MyBatis)和事务管理器会创建数据库链接,并通过ThreadLocal<Map<DataSource,conn>>
+         2. @Configuration、AOP、@Lazy都是基于动态代理的
+
+5. 循环依赖
+
+   1. 什么是循环依赖
+
+      ```
+      aService的Bean的生命周期
+      1. 实例化aService---》普通对象
+      2. （依赖注入）填充bService---》单例池Map---》创建bService
+      	1. 实例化bService---》普通对象
+      	2. （依赖注入）填充aService---》单例池Map---》创建aService
+      	3. 填充其他属性
+          4. Aware回调、初始化前、初始化 、初始化后
+          5. 添加到单例池
+      3. 填充其他属性
+      4. Aware回调、初始化前、初始化 、初始化后
+      5. 添加到单例池
+      ```
+
+   2. 使用三级缓存解决（三个Map）：提前进行AOP操作
+
+      1. 第一级缓存：singletonObjects
+      2. 第二级缓存：earlySingletonObjects（出现循环依赖时，先从二级缓存找）
+      3. 第三级缓存：singletonFactories
