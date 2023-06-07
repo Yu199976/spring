@@ -250,3 +250,19 @@
       1. 第一级缓存：singletonObjects
       2. 第二级缓存：earlySingletonObjects（出现循环依赖时，先从二级缓存找）
       3. 第三级缓存：singletonFactories
+
+   3. @Async出现循环依赖
+
+   4. @Lazy注解解决循环依赖
+
+      ```java
+      @Lazy
+      private BService bService；  
+      //这里生成的是BService的代理对象，并不会创建BService的Bean对象，这样就不会在实例化过程中出现循环依赖
+          
+      ```
+
+6. 整合MyBatis(其他框架)
+
+   1. **FactoryBean**：使用BeanDefinition对象注册、创建、刷新（和Spring一样）Mybatis的**代理对象**
+   2. **MapperScan**：扫描mapper接口，与spring不同Mybatis只关心是否是接口
